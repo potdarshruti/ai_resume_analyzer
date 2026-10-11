@@ -8,7 +8,7 @@ const axiosInstance = axios.create({
 
 export default axiosInstance;
 
-API.interceptors.request.use((req) => {
+axiosInstance.interceptors.request.use((req) => {
   const token = localStorage.getItem("token");
 
   if (token) {
@@ -17,5 +17,3 @@ API.interceptors.request.use((req) => {
 
   return req;
 });
-
-export default API;

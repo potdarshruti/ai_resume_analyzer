@@ -1,6 +1,6 @@
 import express from "express";
 import upload from "../middleware/uploadMiddleware.js";
-import fs from "fs";
+import axios from "axios";
 import pdf from "pdf-parse";
 import mammoth from "mammoth";
 import mongoose from "mongoose";
@@ -20,21 +20,25 @@ router.post("/analyze", upload.single("resume"), async (req, res) => {
     if (!req.file) return res.status(400).json({ message: "No file uploaded" });
 
     const { jobTitle = "", jobDescription = "", userId } = req.body;
-    const filePath = req.file.path;
+    const fileUrl = req.file.secure_url || req.file.url;
     const fileType = req.file.mimetype;
+
+    if (!fileUrl) throw new Error("Cloudinary did not return a resume URL");
+
+    const { data } = await axios.get(fileUrl, { responseType: "arraybuffer" });
+    const fileBuffer = Buffer.from(data);
 
     // ── 1. Extract text ──────────────────────────────────────────────────────
     let extractedText = "";
 
     if (fileType === "application/pdf") {
-      const buffer = fs.readFileSync(filePath);
-      const pdfData = await pdf(buffer);
+      const pdfData = await pdf(fileBuffer);
       extractedText = pdfData.text;
     } else if (
       fileType ===
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     ) {
-      const result = await mammoth.extractRawText({ path: filePath });
+      const result = await mammoth.extractRawText({ buffer: fileBuffer });
       extractedText = result.value;
     } else {
       return res.status(400).json({ message: "Only PDF and DOCX allowed" });

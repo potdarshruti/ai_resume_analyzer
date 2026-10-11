@@ -53,7 +53,11 @@ const ResumeAnalyzer = () => {
       });
       setResult(res.data);
     } catch (err) {
-      setError(err.response?.data?.message || "Analysis failed. Please try again.");
+      setError(
+        err.response?.data?.error ||
+          err.response?.data?.message ||
+          "Analysis failed. Please try again."
+      );
     } finally {
       setLoading(false);
     }

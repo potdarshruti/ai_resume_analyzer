@@ -5,7 +5,7 @@ let client = null;
 const getClient = () => {
   if (!client) {
     const apiKey = process.env.GROQ_API_KEY;
-    console.log("Initializing Groq client with key:", apiKey?.slice(0, 10));
+    if (!apiKey) throw new Error("GROQ_API_KEY is not configured");
     client = new Groq({ apiKey });
   }
   return client;
@@ -13,8 +13,9 @@ const getClient = () => {
 
 const askGroq = async (prompt) => {
   const response = await getClient().chat.completions.create({
-    model: "llama-3.3-70b-versatile",  // free + very capable
+    model: "openai/gpt-oss-20b",
     max_tokens: 2048,
+    response_format: { type: "json_object" },
     messages: [{ role: "user", content: prompt }],
   });
   return response.choices[0].message.content;

@@ -5,14 +5,19 @@ const router = express.Router();
 
 let client = null;
 const getClient = () => {
-  if (!client) client = new Groq({ apiKey: process.env.GROQ_API_KEY });
+  if (!client) {
+    const apiKey = process.env.GROQ_API_KEY;
+    if (!apiKey) throw new Error("GROQ_API_KEY is not configured");
+    client = new Groq({ apiKey });
+  }
   return client;
 };
 
 const askGroq = async (prompt) => {
   const response = await getClient().chat.completions.create({
-    model: "llama-3.3-70b-versatile",
+    model: "openai/gpt-oss-20b",
     max_tokens: 1024,
+    response_format: { type: "json_object" },
     messages: [{ role: "user", content: prompt }],
   });
   return response.choices[0].message.content;
